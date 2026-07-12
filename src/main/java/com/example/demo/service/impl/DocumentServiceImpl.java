@@ -369,6 +369,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
+
     private String expandChunk(DocumentChunk chunk) {
 
         int start = Math.max(0, chunk.getChunkIndex() - 2);
@@ -394,4 +395,90 @@ public class DocumentServiceImpl implements DocumentService {
         return builder.toString();
 
     }
+
+
+    @Override
+    public List<SimilarChunkDTO> semanticSearch(
+            String question,
+            List<UUID> documentIds,
+            int topK
+    ) {
+
+        // Generate embedding for the user's question
+        List<Double> questionEmbedding =
+                embeddingService.generateEmbedding(question);
+
+        // Only load chunks from the selected documents
+        List<DocumentChunk> chunks =
+                chunkRepository.findByDocumentIdIn(documentIds);
+
+        List<SimilarChunkDTO> results =
+                new ArrayList<>();
+
+        for (DocumentChunk chunk : chunks) {
+
+            if (chunk.getEmbedding() == null ||
+                    chunk.getEmbedding().isBlank()) {
+                continue;
+            }
+
+            List<Double> chunkEmbedding =
+                    EmbeddingUtil.fromJson(chunk.getEmbedding());
+
+            double similarity =
+                    CosineSimilarityUtil.cosineSimilarity(
+                            questionEmbedding,
+                            chunkEmbedding
+                    );
+
+            results.add(
+
+                    SimilarChunkDTO.builder()
+
+                            .chunkId(chunk.getId())
+
+                            .documentId(chunk.getDocument().getId())
+
+                            .filename(chunk.getDocument().getFilename())
+
+                            .chunkIndex(chunk.getChunkIndex())
+
+                            .chunkText(expandChunk(chunk))
+
+                            .score(similarity)
+
+                            .build()
+
+            );
+
+        }
+
+        List<SimilarChunkDTO> filtered = results.stream()
+
+                .filter(result ->
+                        result.getScore() >= similarityThreshold
+                )
+
+                .sorted(
+                        Comparator.comparing(
+                                SimilarChunkDTO::getScore
+                        ).reversed()
+                )
+
+                .limit(topK > 0 ? topK : defaultTopK)
+
+                .toList();
+
+        return ContextMergeUtil.merge(filtered);
+
+    }
+
+
+    @Override
+    public List<Document> getDocumentsByIds(List<UUID> ids) {
+
+        return repository.findAllById(ids);
+
+    }
+
 }

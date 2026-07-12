@@ -15,6 +15,8 @@ public interface DocumentService {
 
     List<SimilarChunkDTO> semanticSearch(String question, int topK);
 
+    List<SimilarChunkDTO> semanticSearch(String question, List<UUID> documentIds, int topK);
+
     Document uploadPdf(MultipartFile file, String subject) throws Exception;
 
     Document uploadDocx(MultipartFile file, String subject) throws Exception;
@@ -40,4 +42,6 @@ public interface DocumentService {
     Page<Document> searchAndFilterDocuments(String query, String subject, String documentType, String status, int page, int size, String sortBy, String direction);
 
     List<DocumentChunkDTO> getDocumentChunks(UUID documentId);
+
+    List<Document> getDocumentsByIds(List<UUID> ids);
 }

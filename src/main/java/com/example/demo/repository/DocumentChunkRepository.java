@@ -18,4 +18,6 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, UU
             Integer start,
             Integer end
     );
+
+    List<DocumentChunk> findByDocumentIdIn(List<UUID> documentIds);
 }

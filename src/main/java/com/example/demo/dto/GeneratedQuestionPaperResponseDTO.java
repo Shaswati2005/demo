@@ -1,7 +1,8 @@
 package com.example.demo.dto;
 
 import lombok.*;
-import java.util.List;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -9,9 +10,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GenerateQuestionPaperRequest {
+public class GeneratedQuestionPaperResponseDTO {
 
-
+    private UUID id;
 
     private String subject;
 
@@ -21,13 +22,8 @@ public class GenerateQuestionPaperRequest {
 
     private Integer totalMarks;
 
-    private Integer twoMarkQuestions;
+    private String generatedPaper;
 
-    private Integer fiveMarkQuestions;
+    private LocalDateTime generatedAt;
 
-    private Integer tenMarkQuestions;
-
-    private List<UUID> studyMaterialIds;
-
-    private List<UUID> previousPaperIds;
 }

@@ -94,4 +94,27 @@ public class ChatServiceImpl implements ChatService {
 
     }
 
+    @Override
+    public String generate(String prompt) {
+
+        OllamaChatRequest request =
+                OllamaChatRequest.builder()
+                        .model("qwen3:4b")
+                        .prompt(prompt)
+                        .stream(false)
+                        .build();
+
+        OllamaChatResponse response =
+                restClient.post()
+                        .uri("/api/generate")
+                        .body(request)
+                        .retrieve()
+                        .body(OllamaChatResponse.class);
+
+        if (response == null || response.getResponse() == null) {
+            throw new RuntimeException("Failed to generate response from Ollama.");
+        }
+
+        return response.getResponse();
+    }
 }
