@@ -56,9 +56,12 @@ public class QuestionGenerationHelper {
 
                         .build();
 
-        generatedQuestionPaperService.save(paper);
+        GeneratedQuestionPaper savedPaper =
+                generatedQuestionPaperService.save(paper);
 
         return QuestionPaperResponse.builder()
+
+                .id(savedPaper.getId())
 
                 .questionPaper(generatedPaper)
 

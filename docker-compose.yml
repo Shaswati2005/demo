@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Database Service
+  postgres:
+    image: postgres:16-alpine
+    container_name: exam-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: exam-help-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: YourSecureDbPassword
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  # Ollama LLM Service
+  ollama:
+    image: ollama/ollama:latest
+    container_name: exam-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+
+  # Spring Boot Backend Service
+  backend:
+    build: .
+    container_name: exam-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - ollama
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/exam-help-db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=YourSecureDbPassword
+      - OLLAMA_BASE-URL=http://ollama:11434
+      - FILE_UPLOAD-DIR=/app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    restart: always
+
+volumes:
+  pgdata:
+  ollama_data:
+  uploads_data:
