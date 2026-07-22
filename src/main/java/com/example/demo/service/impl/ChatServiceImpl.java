@@ -20,6 +20,9 @@ public class ChatServiceImpl implements ChatService {
 
     private final RestClient restClient;
 
+    @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}")
+    private String chatModel;
+
     @Override
     public ChatResponseDTO askQuestion(String question) {
 
@@ -30,7 +33,7 @@ public class ChatServiceImpl implements ChatService {
 
         OllamaChatRequest request =
                 OllamaChatRequest.builder()
-                        .model("qwen3:4b")
+                        .model(chatModel)
                         .prompt(prompt)
                         .stream(false)
                         .build();
@@ -99,7 +102,7 @@ public class ChatServiceImpl implements ChatService {
 
         OllamaChatRequest request =
                 OllamaChatRequest.builder()
-                        .model("qwen3:4b")
+                        .model(chatModel)
                         .prompt(prompt)
                         .stream(false)
                         .build();

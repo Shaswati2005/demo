@@ -30,6 +30,9 @@ public class QuestionPaperAnalysisServiceImpl implements QuestionPaperAnalysisSe
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}")
+    private String chatModel;
+
     @Override
     public QuestionPaperAnalysisResponseDTO analyzeUploadedFile(MultipartFile file, String subject) throws Exception {
         Document document = uploadDocument(file, subject);
@@ -114,7 +117,7 @@ public class QuestionPaperAnalysisServiceImpl implements QuestionPaperAnalysisSe
                 """.formatted(document.getExtractedText());
 
         OllamaChatRequest request = OllamaChatRequest.builder()
-                .model("qwen3:4b")
+                .model(chatModel)
                 .prompt(prompt)
                 .stream(false)
                 .build();

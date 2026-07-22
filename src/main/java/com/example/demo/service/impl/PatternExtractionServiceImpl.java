@@ -22,6 +22,9 @@ public class PatternExtractionServiceImpl
 
     private final ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}")
+    private String chatModel;
+
     @Override
     public ExamPatternDTO extractPattern(List<Document> previousPapers) {
 
@@ -80,7 +83,7 @@ public class PatternExtractionServiceImpl
 
         OllamaChatRequest request =
                 OllamaChatRequest.builder()
-                        .model("qwen3:4b")
+                        .model(chatModel)
                         .prompt(prompt)
                         .stream(false)
                         .build();
