@@ -95,7 +95,7 @@ public class PatternExtractionServiceImpl
 
         GeminiRequest request = GeminiRequest.of(prompt);
 
-        String uri = "/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey;
+        java.net.URI uri = java.net.URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey);
 
         GeminiResponse response;
         try {

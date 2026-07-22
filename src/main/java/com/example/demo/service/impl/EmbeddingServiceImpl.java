@@ -35,7 +35,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
         GeminiEmbeddingRequest request = GeminiEmbeddingRequest.of(embeddingModel, input);
 
-        String uri = "/v1beta/models/" + embeddingModel + ":embedContent?key=" + apiKey;
+        java.net.URI uri = java.net.URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + embeddingModel + ":embedContent?key=" + apiKey);
 
         try {
 

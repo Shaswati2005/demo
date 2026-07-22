@@ -45,7 +45,7 @@ public class ChatServiceImpl implements ChatService {
 
         GeminiRequest request = GeminiRequest.of(prompt);
 
-        String uri = "/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey;
+        java.net.URI uri = java.net.URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey);
 
         try {
             GeminiResponse response =
@@ -115,7 +115,7 @@ public class ChatServiceImpl implements ChatService {
 
         GeminiRequest request = GeminiRequest.of(prompt);
 
-        String uri = "/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey;
+        java.net.URI uri = java.net.URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey);
 
         try {
             GeminiResponse response =
