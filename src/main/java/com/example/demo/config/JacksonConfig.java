@@ -9,9 +9,9 @@ public class JacksonConfig {
 
     @Bean
     public ObjectMapper objectMapper() {
-
-        return new ObjectMapper();
-
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return mapper;
     }
 
 }
