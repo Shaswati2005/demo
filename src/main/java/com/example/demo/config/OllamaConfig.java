@@ -12,9 +12,9 @@ public class OllamaConfig {
     private String baseUrl;
 
     @Bean
-    public RestClient restClient() {
+    public RestClient restClient(RestClient.Builder restClientBuilder) {
 
-        return RestClient.builder()
+        return restClientBuilder
                 .baseUrl(baseUrl)
                 .build();
 
