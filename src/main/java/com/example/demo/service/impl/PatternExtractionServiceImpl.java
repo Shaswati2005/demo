@@ -14,7 +14,6 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class PatternExtractionServiceImpl
         implements PatternExtractionService {
 
@@ -22,8 +21,17 @@ public class PatternExtractionServiceImpl
 
     private final ObjectMapper objectMapper;
 
-    @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}")
-    private String chatModel;
+    private final String chatModel;
+
+    public PatternExtractionServiceImpl(
+            RestClient restClient,
+            ObjectMapper objectMapper,
+            @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}") String chatModel
+    ) {
+        this.restClient = restClient;
+        this.objectMapper = objectMapper;
+        this.chatModel = chatModel;
+    }
 
     @Override
     public ExamPatternDTO extractPattern(List<Document> previousPapers) {

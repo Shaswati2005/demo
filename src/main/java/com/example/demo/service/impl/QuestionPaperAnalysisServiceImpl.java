@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class QuestionPaperAnalysisServiceImpl implements QuestionPaperAnalysisService {
 
     private final DocumentService documentService;
@@ -30,8 +29,21 @@ public class QuestionPaperAnalysisServiceImpl implements QuestionPaperAnalysisSe
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}")
-    private String chatModel;
+    private final String chatModel;
+
+    public QuestionPaperAnalysisServiceImpl(
+            DocumentService documentService,
+            QuestionPaperAnalysisRepository repository,
+            RestClient restClient,
+            ObjectMapper objectMapper,
+            @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}") String chatModel
+    ) {
+        this.documentService = documentService;
+        this.repository = repository;
+        this.restClient = restClient;
+        this.objectMapper = objectMapper;
+        this.chatModel = chatModel;
+    }
 
     @Override
     public QuestionPaperAnalysisResponseDTO analyzeUploadedFile(MultipartFile file, String subject) throws Exception {

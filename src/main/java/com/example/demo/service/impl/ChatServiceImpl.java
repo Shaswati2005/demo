@@ -13,15 +13,23 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
 
     private final DocumentService documentService;
 
     private final RestClient restClient;
 
-    @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}")
-    private String chatModel;
+    private final String chatModel;
+
+    public ChatServiceImpl(
+            DocumentService documentService,
+            RestClient restClient,
+            @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}") String chatModel
+    ) {
+        this.documentService = documentService;
+        this.restClient = restClient;
+        this.chatModel = chatModel;
+    }
 
     @Override
     public ChatResponseDTO askQuestion(String question) {
