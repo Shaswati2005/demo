@@ -2,8 +2,8 @@ package com.example.demo.service.impl;
 
 import com.example.demo.dto.QuestionPaperAnalysisResponseDTO;
 import com.example.demo.dto.QuestionPaperAnalysisResultDTO;
-import com.example.demo.dto.chat.OllamaChatRequest;
-import com.example.demo.dto.chat.OllamaChatResponse;
+import com.example.demo.dto.gemini.GeminiRequest;
+import com.example.demo.dto.gemini.GeminiResponse;
 import com.example.demo.entity.Document;
 import com.example.demo.entity.QuestionPaperAnalysis;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -13,7 +13,7 @@ import com.example.demo.service.DocumentService;
 import com.example.demo.service.QuestionPaperAnalysisService;
 import com.example.demo.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,19 +30,22 @@ public class QuestionPaperAnalysisServiceImpl implements QuestionPaperAnalysisSe
     private final ObjectMapper objectMapper;
 
     private final String chatModel;
+    private final String apiKey;
 
     public QuestionPaperAnalysisServiceImpl(
             DocumentService documentService,
             QuestionPaperAnalysisRepository repository,
             RestClient restClient,
             ObjectMapper objectMapper,
-            @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}") String chatModel
+            @Value("${gemini.chat-model}") String chatModel,
+            @Value("${gemini.api-key}") String apiKey
     ) {
         this.documentService = documentService;
         this.repository = repository;
         this.restClient = restClient;
         this.objectMapper = objectMapper;
         this.chatModel = chatModel;
+        this.apiKey = apiKey;
     }
 
     @Override
@@ -128,24 +131,27 @@ public class QuestionPaperAnalysisServiceImpl implements QuestionPaperAnalysisSe
                 %s
                 """.formatted(document.getExtractedText());
 
-        OllamaChatRequest request = OllamaChatRequest.builder()
-                .model(chatModel)
-                .prompt(prompt)
-                .stream(false)
-                .build();
+        GeminiRequest request = GeminiRequest.of(prompt);
 
-        OllamaChatResponse response = restClient.post()
-                .uri("/api/generate")
-                .body(request)
-                .retrieve()
-                .body(OllamaChatResponse.class);
+        String uri = "/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey;
 
-        if (response == null || response.getResponse() == null) {
-            throw new RuntimeException("Empty response from Ollama.");
+        GeminiResponse response;
+        try {
+            response = restClient.post()
+                    .uri(uri)
+                    .body(request)
+                    .retrieve()
+                    .body(GeminiResponse.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            throw new RuntimeException("Gemini API call failed. Status: " + e.getStatusCode() + ", Response: " + e.getResponseBodyAsString(), e);
+        }
+
+        if (response == null || response.getText() == null || response.getText().isEmpty()) {
+            throw new RuntimeException("Empty response from Gemini.");
         }
 
         try {
-            String jsonStr = JsonUtil.extractJson(response.getResponse());
+            String jsonStr = JsonUtil.extractJson(response.getText());
             QuestionPaperAnalysisResultDTO resultDto = objectMapper.readValue(jsonStr, QuestionPaperAnalysisResultDTO.class);
 
             QuestionPaperAnalysis analysis = QuestionPaperAnalysis.builder()
@@ -159,7 +165,7 @@ public class QuestionPaperAnalysisServiceImpl implements QuestionPaperAnalysisSe
             return QuestionPaperAnalysisMapper.toDto(saved, resultDto);
 
         } catch (Exception e) {
-            throw new RuntimeException("Unable to analyze question paper pattern. Raw response: " + response.getResponse(), e);
+            throw new RuntimeException("Unable to analyze question paper pattern. Raw response: " + response.getText(), e);
         }
     }
 

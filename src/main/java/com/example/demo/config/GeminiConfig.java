@@ -6,18 +6,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-public class OllamaConfig {
+public class GeminiConfig {
 
-    @Value("${ollama.base-url}")
-    private String baseUrl;
+    @Value("${gemini.api-key}")
+    private String apiKey;
 
     @Bean
     public RestClient restClient() {
-
         return RestClient.builder()
-                .baseUrl(baseUrl)
+                .baseUrl("https://generativelanguage.googleapis.com")
+                .defaultHeader("Content-Type", "application/json")
                 .build();
-
     }
 
+    @Bean
+    public String geminiApiKey() {
+        return apiKey;
+    }
 }

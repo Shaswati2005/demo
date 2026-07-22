@@ -1,21 +1,30 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.dto.embedding.OllamaEmbeddingRequest;
-import com.example.demo.dto.embedding.OllamaEmbeddingResponse;
+import com.example.demo.dto.gemini.GeminiEmbeddingRequest;
+import com.example.demo.dto.gemini.GeminiEmbeddingResponse;
 import com.example.demo.service.EmbeddingService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.springframework.beans.factory.annotation.Value;
+
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class EmbeddingServiceImpl implements EmbeddingService {
 
     private final RestClient restClient;
-    @Value("${ollama.embedding-model}")
-    private String embeddingModel;
+    private final String embeddingModel;
+    private final String apiKey;
+
+    public EmbeddingServiceImpl(
+            RestClient restClient,
+            @Value("${gemini.embedding-model}") String embeddingModel,
+            @Value("${gemini.api-key}") String apiKey
+    ) {
+        this.restClient = restClient;
+        this.embeddingModel = embeddingModel;
+        this.apiKey = apiKey;
+    }
 
     @Override
     public List<Double> generateEmbedding(String text) {
@@ -24,33 +33,40 @@ public class EmbeddingServiceImpl implements EmbeddingService {
                 ? text.substring(0, 4000)
                 : text;
 
-        OllamaEmbeddingRequest request = OllamaEmbeddingRequest.builder()
-                .model(embeddingModel)
-                .input(input)
-                .build();
+        GeminiEmbeddingRequest request = GeminiEmbeddingRequest.of(embeddingModel, input);
+
+        String uri = "/v1beta/models/" + embeddingModel + ":embedContent?key=" + apiKey;
 
         try {
 
-            OllamaEmbeddingResponse response = restClient.post()
-                    .uri("/api/embed")
+            GeminiEmbeddingResponse response = restClient.post()
+                    .uri(uri)
                     .body(request)
                     .retrieve()
-                    .body(OllamaEmbeddingResponse.class);
+                    .body(GeminiEmbeddingResponse.class);
 
             if (response == null ||
-                    response.getEmbeddings() == null ||
-                    response.getEmbeddings().isEmpty()) {
+                    response.getEmbedding() == null ||
+                    response.getEmbedding().getValues() == null ||
+                    response.getEmbedding().getValues().isEmpty()) {
 
-                throw new RuntimeException("Ollama returned an empty embedding.");
+                throw new RuntimeException("Gemini returned an empty embedding.");
 
             }
 
-            return response.getEmbeddings().getFirst();
+            return response.getEmbedding().getValues();
+
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+
+            throw new RuntimeException(
+                    "Failed to generate embedding from Gemini API. Status: " + e.getStatusCode() + ", Response: " + e.getResponseBodyAsString(),
+                    e
+            );
 
         } catch (Exception e) {
 
             throw new RuntimeException(
-                    "Failed to generate embedding from Ollama. Make sure Ollama is running and the model is installed.",
+                    "Failed to generate embedding from Gemini API: " + e.getMessage(),
                     e
             );
 

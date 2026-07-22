@@ -280,7 +280,7 @@ public class DocumentServiceImpl implements DocumentService {
             } catch (Exception e) {
 
                 throw new RuntimeException(
-                        "Failed to generate embedding for chunk " + i,
+                        "Failed to generate embedding for chunk " + i + ": " + e.getMessage(),
                         e
                 );
 

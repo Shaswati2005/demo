@@ -2,11 +2,11 @@ package com.example.demo.service.impl;
 
 import com.example.demo.dto.ChatResponseDTO;
 import com.example.demo.dto.SimilarChunkDTO;
-import com.example.demo.dto.chat.OllamaChatRequest;
-import com.example.demo.dto.chat.OllamaChatResponse;
+import com.example.demo.dto.gemini.GeminiRequest;
+import com.example.demo.dto.gemini.GeminiResponse;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.DocumentService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -21,14 +21,18 @@ public class ChatServiceImpl implements ChatService {
 
     private final String chatModel;
 
+    private final String apiKey;
+
     public ChatServiceImpl(
             DocumentService documentService,
             RestClient restClient,
-            @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}") String chatModel
+            @Value("${gemini.chat-model}") String chatModel,
+            @Value("${gemini.api-key}") String apiKey
     ) {
         this.documentService = documentService;
         this.restClient = restClient;
         this.chatModel = chatModel;
+        this.apiKey = apiKey;
     }
 
     @Override
@@ -39,24 +43,25 @@ public class ChatServiceImpl implements ChatService {
 
         String prompt = buildPrompt(question, chunks);
 
-        OllamaChatRequest request =
-                OllamaChatRequest.builder()
-                        .model(chatModel)
-                        .prompt(prompt)
-                        .stream(false)
-                        .build();
+        GeminiRequest request = GeminiRequest.of(prompt);
 
-        OllamaChatResponse response =
-                restClient.post()
-                        .uri("/api/generate")
-                        .body(request)
-                        .retrieve()
-                        .body(OllamaChatResponse.class);
+        String uri = "/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey;
 
-        return ChatResponseDTO.builder()
-                .answer(response.getResponse())
-                .sources(chunks)
-                .build();
+        try {
+            GeminiResponse response =
+                    restClient.post()
+                            .uri(uri)
+                            .body(request)
+                            .retrieve()
+                            .body(GeminiResponse.class);
+
+            return ChatResponseDTO.builder()
+                    .answer(response != null ? response.getText() : "")
+                    .sources(chunks)
+                    .build();
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            throw new RuntimeException("Gemini API call failed. Status: " + e.getStatusCode() + ", Response: " + e.getResponseBodyAsString(), e);
+        }
 
     }
 
@@ -108,24 +113,25 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public String generate(String prompt) {
 
-        OllamaChatRequest request =
-                OllamaChatRequest.builder()
-                        .model(chatModel)
-                        .prompt(prompt)
-                        .stream(false)
-                        .build();
+        GeminiRequest request = GeminiRequest.of(prompt);
 
-        OllamaChatResponse response =
-                restClient.post()
-                        .uri("/api/generate")
-                        .body(request)
-                        .retrieve()
-                        .body(OllamaChatResponse.class);
+        String uri = "/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey;
 
-        if (response == null || response.getResponse() == null) {
-            throw new RuntimeException("Failed to generate response from Ollama.");
+        try {
+            GeminiResponse response =
+                    restClient.post()
+                            .uri(uri)
+                            .body(request)
+                            .retrieve()
+                            .body(GeminiResponse.class);
+
+            if (response == null || response.getText() == null || response.getText().isEmpty()) {
+                throw new RuntimeException("Failed to generate response from Gemini.");
+            }
+
+            return response.getText();
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            throw new RuntimeException("Gemini API call failed. Status: " + e.getStatusCode() + ", Response: " + e.getResponseBodyAsString(), e);
         }
-
-        return response.getResponse();
     }
 }

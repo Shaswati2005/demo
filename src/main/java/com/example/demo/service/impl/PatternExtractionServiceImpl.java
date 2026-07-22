@@ -1,13 +1,13 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.dto.ExamPatternDTO;
-import com.example.demo.dto.chat.OllamaChatRequest;
-import com.example.demo.dto.chat.OllamaChatResponse;
+import com.example.demo.dto.gemini.GeminiRequest;
+import com.example.demo.dto.gemini.GeminiResponse;
 import com.example.demo.entity.Document;
 import com.example.demo.service.PatternExtractionService;
 import com.example.demo.util.JsonUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -23,14 +23,18 @@ public class PatternExtractionServiceImpl
 
     private final String chatModel;
 
+    private final String apiKey;
+
     public PatternExtractionServiceImpl(
             RestClient restClient,
             ObjectMapper objectMapper,
-            @org.springframework.beans.factory.annotation.Value("${ollama.chat-model:qwen3:4b}") String chatModel
+            @Value("${gemini.chat-model}") String chatModel,
+            @Value("${gemini.api-key}") String apiKey
     ) {
         this.restClient = restClient;
         this.objectMapper = objectMapper;
         this.chatModel = chatModel;
+        this.apiKey = apiKey;
     }
 
     @Override
@@ -89,25 +93,26 @@ public class PatternExtractionServiceImpl
                 %s
                 """.formatted(text);
 
-        OllamaChatRequest request =
-                OllamaChatRequest.builder()
-                        .model(chatModel)
-                        .prompt(prompt)
-                        .stream(false)
-                        .build();
+        GeminiRequest request = GeminiRequest.of(prompt);
 
-        OllamaChatResponse response =
-                restClient.post()
-                        .uri("/api/generate")
-                        .body(request)
-                        .retrieve()
-                        .body(OllamaChatResponse.class);
+        String uri = "/v1beta/models/" + chatModel + ":generateContent?key=" + apiKey;
+
+        GeminiResponse response;
+        try {
+            response = restClient.post()
+                    .uri(uri)
+                    .body(request)
+                    .retrieve()
+                    .body(GeminiResponse.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            throw new RuntimeException("Gemini API call failed. Status: " + e.getStatusCode() + ", Response: " + e.getResponseBodyAsString(), e);
+        }
 
         try {
 
             String json =
                     JsonUtil.extractJson(
-                            response.getResponse()
+                            response.getText()
                     );
 
             return objectMapper.readValue(
