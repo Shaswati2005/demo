@@ -29,11 +29,9 @@ public class GeneratedQuestionPaper {
 
     private Integer totalMarks;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String generatedPaper;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String prompt;
 

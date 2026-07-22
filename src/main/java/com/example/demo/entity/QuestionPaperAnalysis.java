@@ -31,7 +31,6 @@ public class QuestionPaperAnalysis {
     @Column(nullable = false)
     private String subject;
 
-    @Lob
     @Column(columnDefinition = "TEXT", nullable = false)
     private String analysisResult;
 

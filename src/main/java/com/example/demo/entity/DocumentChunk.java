@@ -18,7 +18,6 @@ public class DocumentChunk {
     private UUID id;
     private Integer chunkIndex;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String chunkText;
 
@@ -26,7 +25,6 @@ public class DocumentChunk {
     @JoinColumn(name = "document_id")
     private Document document;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String embedding;
 }

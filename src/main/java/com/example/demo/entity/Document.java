@@ -38,7 +38,6 @@ public class Document {
     @Column(nullable = false)
     private String filePath;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String extractedText;
 
