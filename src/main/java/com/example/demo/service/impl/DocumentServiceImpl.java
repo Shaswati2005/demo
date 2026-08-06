@@ -256,11 +256,20 @@ public class DocumentServiceImpl implements DocumentService {
 
         List<String> chunks = ChunkingUtil.splitIntoChunks(document.getExtractedText());
 
+        System.out.println("Processing " + chunks.size() + " chunks for document: " + document.getFilename());
+
         for (int i = 0; i < chunks.size(); i++) {
 
             String chunkText = chunks.get(i);
 
             try {
+
+                // Rate limiting: wait between API calls to stay under Gemini free tier (15 req/min)
+                if (i > 0) {
+                    Thread.sleep(4000); // 4 seconds between calls = max 15 req/min
+                }
+
+                System.out.println("Generating embedding for chunk " + (i + 1) + "/" + chunks.size());
 
                 List<Double> embedding =
                         embeddingService.generateEmbedding(chunkText);
@@ -277,6 +286,9 @@ public class DocumentServiceImpl implements DocumentService {
 
                 chunkRepository.save(chunk);
 
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while processing chunks", ie);
             } catch (Exception e) {
 
                 throw new RuntimeException(
@@ -286,6 +298,8 @@ public class DocumentServiceImpl implements DocumentService {
 
             }
         }
+
+        System.out.println("Finished processing all " + chunks.size() + " chunks.");
     }
 
 
