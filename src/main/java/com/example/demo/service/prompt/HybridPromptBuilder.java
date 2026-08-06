@@ -36,7 +36,7 @@ public class HybridPromptBuilder {
                 %s
 
                 Total Marks:
-                %d
+                %s
 
                 Professor Pattern:
 
@@ -59,7 +59,7 @@ public class HybridPromptBuilder {
                         subject,
                         difficulty,
                         bloomLevel,
-                        totalMarks,
+                        totalMarks != null ? totalMarks : "N/A",
                         pattern,
                         context
                 );

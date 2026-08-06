@@ -34,7 +34,7 @@ public class NotesPromptBuilder {
                 %s
 
                 Total Marks:
-                %d
+                %s
 
                 Study Material:
 
@@ -52,7 +52,7 @@ public class NotesPromptBuilder {
                         subject,
                         difficulty,
                         bloomLevel,
-                        totalMarks,
+                        totalMarks != null ? totalMarks : "N/A",
                         context
                 );
 

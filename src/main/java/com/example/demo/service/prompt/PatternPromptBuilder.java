@@ -34,7 +34,7 @@ public class PatternPromptBuilder {
                 %s
 
                 Total Marks:
-                %d
+                %s
 
                 Professor Pattern:
 
@@ -53,7 +53,7 @@ public class PatternPromptBuilder {
                         subject,
                         difficulty,
                         bloomLevel,
-                        totalMarks,
+                        totalMarks != null ? totalMarks : "N/A",
                         pattern
                 );
 
